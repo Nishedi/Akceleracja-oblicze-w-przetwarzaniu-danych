@@ -31,6 +31,9 @@ class TestCPUPrimalityTest(unittest.TestCase):
     def test_edge_cases_primes(self):
         self._test_from_file("data/edge_cases_true.csv", True)
 
+    def test_pseudo_primes(self):
+        self._test_from_file("data/pseudo_primes.csv", False)
+
     def _test_from_file(self, file_path, expected: bool):
         numbers = load_numbers_from_file(file_path)
         for number in numbers:
