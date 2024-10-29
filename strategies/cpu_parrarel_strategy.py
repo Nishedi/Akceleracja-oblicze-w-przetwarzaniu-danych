@@ -14,11 +14,12 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
         manager = Manager()
         valueIsNotPrime = manager.Value('b', False)
         # Wyznaczenie liczby rdzeni
-        coreCount = psutil.cpu_count(logical=False)
+        number_of_cores = psutil.cpu_count(logical=False)
+        repetitions_per_core = math.ceil(k / number_of_cores)
         # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
-        for i in range(coreCount):
-            processes.append(Process(target=self.single_process, args=(coreCount, n, k, valueIsNotPrime)))
+        for i in range(number_of_cores):
+            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n,  valueIsNotPrime)))
 
         #Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
@@ -33,26 +34,50 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
         # If we got this far, testValue is probably prime
         return True
 
-    def single_process(self, coreCount, n, k, valueIsNotPrime):
+    def single_process(self, repetitions_per_core, n, valueIsNotPrime):
         d = n - 1
-        coreRepetitions = math.ceil(k / coreCount)
-        for _ in range(coreRepetitions):
-            if not self._miller_test(d, n):
+        for _ in range(repetitions_per_core):
+            # Zamiast wywołania self._miller_test, wstawiamy logikę tej funkcji
+            a = random.randint(2, n - 2)
+            x = pow(a, d, n)
+            if x == 1 or x == n - 1:
+                continue  # przejdź do kolejnej iteracji
+
+            while d != n - 1:
+                x = (x * x) % n
+                d *= 2
+                if x == 1:
+                    valueIsNotPrime.value = True
+                    return False
+                if x == n - 1:
+                    break
+            else:
                 valueIsNotPrime.value = True
                 return False
+
         valueIsNotPrime.value = False
         return True
 
-    def _miller_test(self, d, n):
-        a = random.randint(2, n - 2)
-        x = pow(a, d, n)
-        if x == 1 or x == n - 1:
-            return True
-        while d != n - 1:
-            x = (x * x) % n
-            d *= 2
-            if x == 1:
-                return False
-            if x == n - 1:
-                return True
-        return False
+    # def single_process(self, coreCount, n, k, valueIsNotPrime):
+    #     d = n - 1
+    #     coreRepetitions = math.ceil(k / coreCount)
+    #     for _ in range(coreRepetitions):
+    #         if not self._miller_test(d, n):
+    #             valueIsNotPrime.value = True
+    #             return False
+    #     valueIsNotPrime.value = False
+    #     return True
+    #
+    # def _miller_test(self, d, n):
+    #     a = random.randint(2, n - 2)
+    #     x = pow(a, d, n)
+    #     if x == 1 or x == n - 1:
+    #         return True
+    #     while d != n - 1:
+    #         x = (x * x) % n
+    #         d *= 2
+    #         if x == 1:
+    #             return False
+    #         if x == n - 1:
+    #             return True
+    #     return False
