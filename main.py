@@ -1,5 +1,6 @@
 from miller_rabin import MillerRabinTest
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
+from strategies.cpu_parrarel_strategy import CPUParrarelPrimalityStrategyStrategy
 from utils import load_numbers_from_file, stopwatch
 
 
@@ -11,6 +12,8 @@ def main():
 
     if choice == '1':
         strategy = CPUPrimalityTestStrategy()
+    if choice == '2':
+        strategy = CPUParrarelPrimalityStrategyStrategy()
     else:
         print("Invalid choice, defaulting to CPU strategy.")
         strategy = CPUPrimalityTestStrategy()
