@@ -1,43 +1,23 @@
 from strategies.base_strategy import PrimalityTestStrategy
-from random import random
+import random
 from multiprocessing import Process, Manager
 import psutil
 import math
 
 class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
     def is_prime(self, n: int, k: int) -> bool:
-        testValue =n
-        repetitions = k
-        """Returns True if testValue is probably prime, False if it's definitely composite."""
         manager = Manager()
         valueIsNotPrime = manager.Value('b', False)
-
-        if testValue < 3:
-            return False
-
-        # Find max power of 2 that divides testValue - 1
-        powerOfTwo = 0
-        testValueMinusOne = testValue - 1
-        while testValueMinusOne % 2 == 0:
-            testValueMinusOne //= 2
-            powerOfTwo += 1
-
-        # Get number of cores
+        # Wyznaczenie liczby rdzeni
         coreCount = psutil.cpu_count(logical=False)
-
-        # Create a list of processes
+        # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
-
-        # Create a process for each core
         for i in range(coreCount):
-            processes.append(Process(target=self.cpu_check_number, args=(
-                i, coreCount, testValue, powerOfTwo, repetitions, valueIsNotPrime)))
+            processes.append(Process(target=self.cpu_check_number, args=(coreCount, n, k, valueIsNotPrime)))
 
-        # Start all processes
+        #Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
             process.start()
-
-        # Wait for all processes to finish
         for process in processes:
             process.join()
 
@@ -48,38 +28,26 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
         # If we got this far, testValue is probably prime
         return True
 
-    def cpu_check_number(self, coreCount, testValue, powerOfTwo, allRepetitions, valueIsNotPrime):
-        """Returns True(0) if testValue is probably prime, False(1) if it's definitely composite."""
-
-        # Calculate the number of repetitions for each process
+    def cpu_check_number(self, coreCount, testValue, allRepetitions, valueIsNotPrime):
+        d = testValue - 1
         coreRepetitions = math.ceil(allRepetitions / coreCount)
-
-        for _ in range(1, coreRepetitions):
-            # Choose a random number between 2 and testValue - 2
-            randomValue = int(random() * (testValue - 3)) + 2
-
-            # Calculate randomValue^testValueMinusOne mod testValue
-            x = pow(randomValue, testValue - 1, testValue)
-
-            # If x is 1 or testValue - 1, we don't know if testValue is prime, so we'll try again
-            if x == 1 or x == testValue - 1:
-                continue
-
-            # Otherwise, we'll keep squaring x and checking if it's equal to testValue - 1
-            for _ in range(1, powerOfTwo):
-                if x == testValue - 1:
-                    break
-
-                x = pow(x, 2, testValue)
-                if x == 1:
-                    valueIsNotPrime.value = True
-                    return
-
-            # If x != testValue - 1, then we know that testValue is definitely composite
-            if x != testValue - 1:
+        for _ in range(coreRepetitions):
+            if not self._miller_test(d, testValue):
                 valueIsNotPrime.value = True
-                return
-
-        # If we got this far, testValue is probably prime
+                return False
         valueIsNotPrime.value = False
-        return
+        return True
+
+    def _miller_test(self, d, n):
+        a = random.randint(2, n - 2)
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            return True
+        while d != n - 1:
+            x = (x * x) % n
+            d *= 2
+            if x == 1:
+                return False
+            if x == n - 1:
+                return True
+        return False

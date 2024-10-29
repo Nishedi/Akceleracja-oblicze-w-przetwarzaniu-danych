@@ -11,7 +11,7 @@ def main():
         print("2. Parrael CPU")
 
         choice = input("Enter the number of your choice: ")
-
+        print(choice)
         if choice == '1':
             strategy = CPUPrimalityTestStrategy()
         if choice == '2':
