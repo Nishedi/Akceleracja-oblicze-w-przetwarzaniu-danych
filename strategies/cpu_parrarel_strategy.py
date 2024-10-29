@@ -6,6 +6,11 @@ import math
 
 class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
     def is_prime(self, n: int, k: int) -> bool:
+        if n == 2 or n == 3:
+            return True
+        if n <= 1 or n % 2 == 0:
+            return False
+
         manager = Manager()
         valueIsNotPrime = manager.Value('b', False)
         # Wyznaczenie liczby rdzeni
@@ -13,7 +18,7 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
         # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
         for i in range(coreCount):
-            processes.append(Process(target=self.cpu_check_number, args=(coreCount, n, k, valueIsNotPrime)))
+            processes.append(Process(target=self.single_process, args=(coreCount, n, k, valueIsNotPrime)))
 
         #Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
@@ -28,11 +33,11 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
         # If we got this far, testValue is probably prime
         return True
 
-    def cpu_check_number(self, coreCount, testValue, allRepetitions, valueIsNotPrime):
-        d = testValue - 1
-        coreRepetitions = math.ceil(allRepetitions / coreCount)
+    def single_process(self, coreCount, n, k, valueIsNotPrime):
+        d = n - 1
+        coreRepetitions = math.ceil(k / coreCount)
         for _ in range(coreRepetitions):
-            if not self._miller_test(d, testValue):
+            if not self._miller_test(d, n):
                 valueIsNotPrime.value = True
                 return False
         valueIsNotPrime.value = False
