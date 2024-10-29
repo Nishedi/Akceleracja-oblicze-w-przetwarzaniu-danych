@@ -5,6 +5,11 @@ from utils import load_numbers_from_file, stopwatch
 
 
 def main():
+    strategy_mapping = {
+        '1': CPUPrimalityTestStrategy,
+        '2': CPUParrarelPrimalityStrategyStrategy
+    }
+
     while True:
         print("Choose strategy:")
         print("1. CPU")
@@ -12,13 +17,12 @@ def main():
 
         choice = input("Enter the number of your choice: ")
         print(choice)
-        if choice == '1':
-            strategy = CPUPrimalityTestStrategy()
-        if choice == '2':
-            strategy = CPUParrarelPrimalityStrategyStrategy()
-        else:
+
+        # Get the strategy based on the user's choice
+        strategy = strategy_mapping.get(choice, CPUPrimalityTestStrategy)()
+
+        if choice not in strategy_mapping:
             print("Invalid choice, defaulting to CPU strategy.")
-            strategy = CPUPrimalityTestStrategy()
 
         miller_rabin_test = MillerRabinTest(strategy)
 
