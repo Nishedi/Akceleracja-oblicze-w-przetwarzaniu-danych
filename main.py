@@ -1,5 +1,5 @@
 from miller_rabin import MillerRabinTest
-from strategies.cpu_parallel_strategy import CPUParallelPrimalityStrategy
+from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
 from utils import load_numbers_from_file, stopwatch
 
@@ -7,7 +7,7 @@ from utils import load_numbers_from_file, stopwatch
 def main():
     strategy_mapping = {
         '1': CPUPrimalityTestStrategy,
-        '2': CPUParallelPrimalityStrategy
+        '2': CPUParallelPrimalityTestStrategy
     }
 
     while True:

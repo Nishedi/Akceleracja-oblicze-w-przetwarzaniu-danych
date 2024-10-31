@@ -4,7 +4,7 @@ from multiprocessing import Process, Manager
 import psutil
 import math
 
-class CPUParallelPrimalityStrategy(PrimalityTestStrategy):
+class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
     def is_prime(self, n: int, k: int) -> bool:
         if n == 2 or n == 3:
             return True
