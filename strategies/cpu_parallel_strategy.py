@@ -4,7 +4,7 @@ from multiprocessing import Process, Manager
 import psutil
 import math
 
-class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
+class CPUParallelPrimalityStrategy(PrimalityTestStrategy):
     def is_prime(self, n: int, k: int) -> bool:
         if n == 2 or n == 3:
             return True
@@ -12,14 +12,14 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
             return False
 
         manager = Manager()
-        valueIsNotPrime = manager.Value('b', False)
+        value_is_not_prime = manager.Value('b', False)
         # Wyznaczenie liczby rdzeni
         number_of_cores = psutil.cpu_count(logical=False)
         repetitions_per_core = math.ceil(k / number_of_cores)
         # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
         for i in range(number_of_cores):
-            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n,  valueIsNotPrime)))
+            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n,  value_is_not_prime)))
 
         #Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
@@ -28,13 +28,13 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
             process.join()
 
         # Check if any of the processes found a composite number
-        if valueIsNotPrime.value:
+        if value_is_not_prime.value:
             return False
 
         # If we got this far, testValue is probably prime
         return True
 
-    def single_process(self, repetitions_per_core, n, valueIsNotPrime):
+    def single_process(self, repetitions_per_core: int, n: int, value_is_not_prime: bool) -> bool:
         d = n - 1
         for _ in range(repetitions_per_core):
             # Zamiast wywołania self._miller_test, wstawiamy logikę tej funkcji
@@ -47,15 +47,15 @@ class CPUParrarelPrimalityStrategyStrategy(PrimalityTestStrategy):
                 x = (x * x) % n
                 d *= 2
                 if x == 1:
-                    valueIsNotPrime.value = True
+                    value_is_not_prime.value = True
                     return False
                 if x == n - 1:
                     break
             else:
-                valueIsNotPrime.value = True
+                value_is_not_prime.value = True
                 return False
 
-        valueIsNotPrime.value = False
+        value_is_not_prime.value = False
         return True
 
     # def single_process(self, coreCount, n, k, valueIsNotPrime):

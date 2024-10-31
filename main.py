@@ -1,19 +1,19 @@
 from miller_rabin import MillerRabinTest
+from strategies.cpu_parallel_strategy import CPUParallelPrimalityStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
-from strategies.cpu_parrarel_strategy import CPUParrarelPrimalityStrategyStrategy
 from utils import load_numbers_from_file, stopwatch
 
 
 def main():
     strategy_mapping = {
         '1': CPUPrimalityTestStrategy,
-        '2': CPUParrarelPrimalityStrategyStrategy
+        '2': CPUParallelPrimalityStrategy
     }
 
     while True:
         print("Choose strategy:")
         print("1. CPU")
-        print("2. Parrael CPU")
+        print("2. Parallel CPU")
 
         choice = input("Enter the number of your choice: ")
         print(choice)
