@@ -3,7 +3,8 @@ import random
 
 
 class CPUPrimalityTestStrategy(PrimalityTestStrategy):
-    def _miller_test(self, d, n):
+    @staticmethod
+    def _miller_test(d, n):
         a = random.randint(2, n - 2)
         x = pow(a, d, n)
         if x == 1 or x == n - 1:
