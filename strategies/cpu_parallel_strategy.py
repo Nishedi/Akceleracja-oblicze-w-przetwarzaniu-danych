@@ -4,6 +4,7 @@ from multiprocessing import Process, Manager
 import psutil
 import math
 
+
 class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
     def is_prime(self, n: int, k: int) -> bool:
         if n == 2 or n == 3:
@@ -18,10 +19,10 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
         repetitions_per_core = math.ceil(k / number_of_cores)
         # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
-        for i in range(number_of_cores):
-            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n,  value_is_not_prime)))
+        for _ in range(number_of_cores):
+            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n, value_is_not_prime)))
 
-        #Uruchom wszystkie procesy i poczekaj na ich zakończenie
+        # Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
             process.start()
         for process in processes:
@@ -34,7 +35,8 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
         # If we got this far, testValue is probably prime
         return True
 
-    def single_process(self, repetitions_per_core: int, n: int, value_is_not_prime: bool) -> bool:
+    @staticmethod
+    def single_process(repetitions_per_core: int, n: int, value_is_not_prime: bool) -> bool:
         d = n - 1
         for _ in range(repetitions_per_core):
             # Zamiast wywołania self._miller_test, wstawiamy logikę tej funkcji
