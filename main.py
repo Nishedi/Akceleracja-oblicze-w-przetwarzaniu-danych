@@ -1,25 +1,29 @@
 from miller_rabin import MillerRabinTest
 from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
+from strategies.gpu_strategy import GPUPrimalityTestStrategy
 from utils import load_numbers_from_file, stopwatch
 
 
 def main():
     strategy_mapping = {
         '1': CPUPrimalityTestStrategy,
-        '2': CPUParallelPrimalityTestStrategy
+        '2': CPUParallelPrimalityTestStrategy,
+        '3': GPUPrimalityTestStrategy
     }
 
     while True:
         print("Choose strategy:")
         print("1. CPU")
         print("2. Parallel CPU")
+        print("3. GPU")
 
         choice = input("Enter the number of your choice: ")
         print(choice)
 
         # Get the strategy based on the user's choice
         strategy = strategy_mapping.get(choice, CPUPrimalityTestStrategy)()
+
 
         if choice not in strategy_mapping:
             print("Invalid choice, defaulting to CPU strategy.")
