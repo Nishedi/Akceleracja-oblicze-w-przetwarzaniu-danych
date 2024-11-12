@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import sympy
+
 from miller_rabin import MillerRabinTest
 from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
@@ -30,7 +32,7 @@ class Benchmark:
 
         for min_val, max_val in num_ranges:
             range_id = f"{min_val}-{max_val}"
-            numbers = [random.randint(min_val, max_val) for _ in range(numbers_per_range)]
+            numbers = [sympy.randprime(min_val, max_val) for _ in range(numbers_per_range)]
             test_data[range_id] = numbers
 
         with open(self.output_dir / "test_data.json", "w") as f:
@@ -54,7 +56,7 @@ class Benchmark:
             min_num = 10 ** (digits - 1)
             max_num = 10 ** digits - 1
 
-            test_numbers = sorted([random.randint(min_num, max_num)
+            test_numbers = sorted([sympy.randprime(min_num, max_num)
                                    for _ in range(samples_per_step)])
 
             results["input_sizes"][digits] = test_numbers
@@ -74,6 +76,7 @@ class Benchmark:
             start_time = time.time()
             self.cpu_test.is_prime(num, iterations)
             cpu_times.append(time.time() - start_time)
+            print("cpu", time.time() - start_time)
         results["cpu"][index] = cpu_times
 
         parallel_times = []
@@ -81,6 +84,7 @@ class Benchmark:
             start_time = time.time()
             self.parallel_test.is_prime(num, iterations)
             parallel_times.append(time.time() - start_time)
+            print("parallel", time.time() - start_time)
         results["parallel"][index] = parallel_times
 
         return cpu_times, parallel_times
@@ -153,6 +157,73 @@ class Benchmark:
         plt.savefig(self.output_dir / "line_chart.png")
         plt.close()
 
+    def generate_iterations_test(self,
+                                  test_range: Tuple[int, int],
+                                  start_iterations: int = 1000,
+                                  end_iterations: int = 10000000,
+                                  samples_per_step: int = 3) -> Dict[str, List[float]]:
+        min_val, max_val = test_range
+        numbers = [sympy.randprime(min_val, max_val) for _ in range(samples_per_step)]
+
+        results = {
+            "iterations": [],
+            "cpu_times": [],
+            "parallel_times": []
+        }
+
+        print("\nStarting iteration test...")
+
+        iterations = start_iterations
+        while iterations <= end_iterations:
+            print(f"Testing {iterations} iterations...")
+
+            cpu_times, parallel_times = self.measure_time_for_iterations(numbers, iterations)
+
+            results["iterations"].append(iterations)
+            results["cpu_times"].append(np.mean(cpu_times))
+            results["parallel_times"].append(np.mean(parallel_times))
+
+            iterations *= 10  # Zwiększamy liczbę iteracji o jedno zero
+
+        with open(self.output_dir / "iterations_results.json", "w") as f:
+            json.dump(results, f)
+
+        return results
+
+    def measure_time_for_iterations(self, test_numbers, iterations):
+        cpu_times = []
+        for num in test_numbers:
+            start_time = time.time()
+            self.cpu_test.is_prime(num, iterations)
+            cpu_times.append(time.time() - start_time)
+
+        parallel_times = []
+        for num in test_numbers:
+            start_time = time.time()
+            self.parallel_test.is_prime(num, iterations)
+            parallel_times.append(time.time() - start_time)
+
+        return cpu_times, parallel_times
+
+    def generate_iterations_chart(self, results: Dict[str, List[float]]):
+        iterations = results["iterations"]
+        cpu_times = results["cpu_times"]
+        parallel_times = results["parallel_times"]
+
+        plt.figure(figsize=(12, 6))
+
+        plt.plot(iterations, cpu_times, label="CPU Strategy", marker='o')
+        plt.plot(iterations, parallel_times, label="Parallel Strategy", marker='s')
+
+        plt.xlabel('Number of Iterations')
+        plt.ylabel('Average Execution Time (seconds)')
+        plt.title('Execution Time vs Number of Iterations')
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(self.output_dir / "iterations_chart.png")
+        plt.close()
+
 
 def main():
     benchmark = Benchmark()
@@ -165,12 +236,15 @@ def main():
         (10000000, 100000000)
     ]
 
-    range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=10)
-    range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10)
+    range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
+    range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
     benchmark.generate_bar_chart(range_results)
 
-    results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10)
+    results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
     benchmark.generate_line_chart(results)
+
+    iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=10000000, samples_per_step=3)
+    benchmark.generate_iterations_chart(iteration_results)
 
 
 if __name__ == "__main__":

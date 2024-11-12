@@ -53,7 +53,7 @@ def main():
                 print(f"File {file_path} not found.")
         elif input_mode == '3':
             n = 4754597
-            k = 100000000
+            k = 10000000
             is_prime = stopwatch(miller_rabin_test.is_prime)(n, k)
             print(f"Number {n} is prime: {is_prime}")
         else:
