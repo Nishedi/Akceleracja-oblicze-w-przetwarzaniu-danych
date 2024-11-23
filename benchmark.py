@@ -8,6 +8,7 @@ import numpy as np
 import sympy
 
 from miller_rabin import MillerRabinTest
+from random_base_generator import RandomBaseGenerator
 from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
 
@@ -73,16 +74,18 @@ class Benchmark:
     def measure_time(self, test_numbers, iterations, results, index):
         cpu_times = []
         for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
             start_time = time.time()
-            self.cpu_test.is_prime(num, iterations)
+            self.cpu_test.is_prime(num, iterations, random_bases)
             cpu_times.append(time.time() - start_time)
             print("cpu", time.time() - start_time)
         results["cpu"][index] = cpu_times
 
         parallel_times = []
         for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
             start_time = time.time()
-            self.parallel_test.is_prime(num, iterations)
+            self.parallel_test.is_prime(num, iterations, random_bases)
             parallel_times.append(time.time() - start_time)
             print("parallel", time.time() - start_time)
         results["parallel"][index] = parallel_times
@@ -193,14 +196,16 @@ class Benchmark:
     def measure_time_for_iterations(self, test_numbers, iterations):
         cpu_times = []
         for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
             start_time = time.time()
-            self.cpu_test.is_prime(num, iterations)
+            self.cpu_test.is_prime(num, iterations, random_bases)
             cpu_times.append(time.time() - start_time)
 
         parallel_times = []
         for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
             start_time = time.time()
-            self.parallel_test.is_prime(num, iterations)
+            self.parallel_test.is_prime(num, iterations, random_bases)
             parallel_times.append(time.time() - start_time)
 
         return cpu_times, parallel_times
