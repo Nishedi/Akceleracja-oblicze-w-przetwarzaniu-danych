@@ -1,3 +1,4 @@
+from random_base_generator import RandomBaseGenerator
 from miller_rabin import MillerRabinTest
 from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
@@ -39,7 +40,8 @@ def main():
         if input_mode == '1':
             n = int(input("Enter the number to check: "))
             k = int(input("Enter the number of iterations (default 10): ") or 10)
-            is_prime = stopwatch(miller_rabin_test.is_prime)(n, k)
+            random_bases = RandomBaseGenerator.generate_bases(n, k)
+            is_prime = stopwatch(miller_rabin_test.is_prime)(n, k, random_bases)
             print(f"Number {n} is prime: {is_prime}")
         elif input_mode == '2':
             file_path = input("Enter the file path: ") or 'numbers.txt'
@@ -47,14 +49,16 @@ def main():
                 numbers = load_numbers_from_file(file_path)
                 k = int(input("Enter the number of iterations (default 10): ") or 10)
                 for number in numbers:
-                    is_prime = stopwatch(miller_rabin_test.is_prime)(number, k)
+                    random_bases = RandomBaseGenerator.generate_bases(number, k)
+                    is_prime = stopwatch(miller_rabin_test.is_prime)(number, k, random_bases)
                     print(f"Number {number} is prime: {is_prime}")
             except FileNotFoundError:
                 print(f"File {file_path} not found.")
         elif input_mode == '3':
             n = 4754597
             k = 10000000
-            is_prime = stopwatch(miller_rabin_test.is_prime)(n, k)
+            random_bases = RandomBaseGenerator.generate_bases(n, k)
+            is_prime = stopwatch(miller_rabin_test.is_prime)(n, k, random_bases)
             print(f"Number {n} is prime: {is_prime}")
         else:
             print("Invalid input mode selected.")

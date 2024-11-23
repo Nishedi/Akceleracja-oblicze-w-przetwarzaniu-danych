@@ -1,12 +1,12 @@
 from strategies.base_strategy import PrimalityTestStrategy
-import random
 from multiprocessing import Process, Manager
+import numpy as np
 import psutil
 import math
 
 
 class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
-    def is_prime(self, n: int, k: int) -> bool:
+    def is_prime(self, n: int, k: int, bases: np.ndarray) -> bool:
         if n == 2 or n == 3:
             return True
         if n <= 1 or n % 2 == 0:
@@ -19,8 +19,11 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
         repetitions_per_core = math.ceil(k / number_of_cores)
         # Przygotowanie listy procesów do uruchomienia na każdym rdzeniu
         processes = []
-        for _ in range(number_of_cores):
-            processes.append(Process(target=self.single_process, args=(repetitions_per_core, n, value_is_not_prime)))
+        for i in range(number_of_cores):
+            start_idx = i * repetitions_per_core
+            end_idx = min(start_idx + repetitions_per_core, len(bases))
+            core_bases = bases[start_idx:end_idx]
+            processes.append(Process(target=self.single_process, args=(repetitions_per_core, core_bases, n, value_is_not_prime)))
 
         # Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
@@ -36,12 +39,11 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
         return True
 
     @staticmethod
-    def single_process(repetitions_per_core: int, n: int, value_is_not_prime: bool) -> bool:
+    def single_process(repetitions_per_core: int, bases: np.ndarray, n: int, value_is_not_prime: bool) -> bool:
         d = n - 1
-        for _ in range(repetitions_per_core):
+        for base in bases:
             # Zamiast wywołania self._miller_test, wstawiamy logikę tej funkcji
-            a = random.randint(2, n - 2)
-            x = pow(a, d, n)
+            x = pow(int(base), d, n)
             if x == 1 or x == n - 1:
                 continue  # przejdź do kolejnej iteracji
 

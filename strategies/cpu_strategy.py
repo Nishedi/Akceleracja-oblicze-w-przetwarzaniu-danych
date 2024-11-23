@@ -1,12 +1,11 @@
 from strategies.base_strategy import PrimalityTestStrategy
-import random
+import numpy as np
 
 
 class CPUPrimalityTestStrategy(PrimalityTestStrategy):
     @staticmethod
-    def _miller_test(d, n):
-        a = random.randint(2, n - 2)
-        x = pow(a, d, n)
+    def _miller_test(d, n, base):
+        x = pow(base, d, n)
         if x == 1 or x == n - 1:
             return True
         while d != n - 1:
@@ -18,15 +17,17 @@ class CPUPrimalityTestStrategy(PrimalityTestStrategy):
                 return True
         return False
 
-    def is_prime(self, n: int, k: int) -> bool:
+    def is_prime(self, n: int, k: int, bases: np.ndarray) -> bool:
         if n == 2 or n == 3:
             return True
         if n <= 1 or n % 2 == 0:
             return False
+
         d = n - 1
         while d % 2 == 0:
             d //= 2
-        for _ in range(k):
-            if not self._miller_test(d, n):
+
+        for base in bases:
+            if not self._miller_test(d, n, int(base)):
                 return False
         return True
