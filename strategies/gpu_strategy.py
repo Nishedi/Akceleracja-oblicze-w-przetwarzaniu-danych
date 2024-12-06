@@ -67,8 +67,12 @@ class GPUPrimalityTestStrategy(PrimalityTestStrategy):
         results = np.zeros(k, dtype=np.int32)
         gpu_results = gpuarray.to_gpu(results)
 
+        drv.init()
+        device = drv.Device(0)
+        max_threads_per_block = device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK)
+
         # Uruchamianie kernela
-        block_size = 512
+        block_size = max_threads_per_block
         grid_size = (k + block_size - 1) // block_size
         miller_rabin_test = self.mod.get_function("miller_rabin_test")
         miller_rabin_test(gpu_bases, gpu_results, np.uint64(d), np.uint64(n), np.int32(k), block=(block_size, 1, 1),
