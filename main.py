@@ -22,9 +22,7 @@ def main():
         choice = input("Enter the number of your choice: ")
         print(choice)
 
-        # Get the strategy based on the user's choice
         strategy = strategy_mapping.get(choice, CPUPrimalityTestStrategy)()
-
 
         if choice not in strategy_mapping:
             print("Invalid choice, defaulting to CPU strategy.")

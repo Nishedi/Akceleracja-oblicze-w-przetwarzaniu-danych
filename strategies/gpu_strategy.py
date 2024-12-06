@@ -58,37 +58,25 @@ class GPUPrimalityTestStrategy(PrimalityTestStrategy):
         if n <= 1 or n % 2 == 0:
             return False
 
-        # Obliczanie wartości d
         d = n - 1
         while d % 2 == 0:
             d //= 2
 
         # Przenoszenie danych na GPU
-        start_data_transfer = time.time()
         gpu_bases = gpuarray.to_gpu(bases.astype(np.int64))
         results = np.zeros(k, dtype=np.int32)
         gpu_results = gpuarray.to_gpu(results)
-        end_data_transfer = time.time()
 
         # Uruchamianie kernela
-        start_kernel = time.time()
         block_size = 512
         grid_size = (k + block_size - 1) // block_size
         miller_rabin_test = self.mod.get_function("miller_rabin_test")
         miller_rabin_test(gpu_bases, gpu_results, np.uint64(d), np.uint64(n), np.int32(k), block=(block_size, 1, 1),
                           grid=(grid_size, 1))
         drv.Context.synchronize()  # Czekanie na zakończenie kernela
-        end_kernel = time.time()
 
         # Pobranie wyników z GPU
-        start_results_retrieval = time.time()
         results = gpu_results.get()
-        end_results_retrieval = time.time()
-
-        # Wyniki czasowe
-        # print(f"Czas przenoszenia danych na GPU: {end_data_transfer - start_data_transfer:.6f} s")
-        # print(f"Czas uruchomienia kernela: {end_kernel - start_kernel:.6f} s")
-        # print(f"Czas pobierania wyników z GPU: {end_results_retrieval - start_results_retrieval:.6f} s")
 
         # Sprawdzenie, czy wszystkie testy zakończyły się sukcesem
         return all(results)

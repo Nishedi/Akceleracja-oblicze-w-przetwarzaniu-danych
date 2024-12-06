@@ -31,21 +31,22 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
         for process in processes:
             process.join()
 
-        # Check if any of the processes found a composite number
+        # Sprawdź, czy któryś z procesów znalazł liczbę złożoną
         if value_is_not_prime.value:
             return False
 
-        # If we got this far, testValue is probably prime
         return True
 
     @staticmethod
-    def single_process(repetitions_per_core: int, bases: np.ndarray, n: int, value_is_not_prime: bool) -> bool:
+    def single_process(bases: np.ndarray, n: int, value_is_not_prime: bool) -> bool:
         d = n - 1
+        while d % 2 == 0:
+            d //= 2
+
         for base in bases:
-            # Zamiast wywołania self._miller_test, wstawiamy logikę tej funkcji
             x = pow(int(base), d, n)
             if x == 1 or x == n - 1:
-                continue  # przejdź do kolejnej iteracji
+                continue
 
             while d != n - 1:
                 x = (x * x) % n
@@ -61,27 +62,3 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
 
         value_is_not_prime.value = False
         return True
-
-    # def single_process(self, coreCount, n, k, valueIsNotPrime):
-    #     d = n - 1
-    #     coreRepetitions = math.ceil(k / coreCount)
-    #     for _ in range(coreRepetitions):
-    #         if not self._miller_test(d, n):
-    #             valueIsNotPrime.value = True
-    #             return False
-    #     valueIsNotPrime.value = False
-    #     return True
-    #
-    # def _miller_test(self, d, n):
-    #     a = random.randint(2, n - 2)
-    #     x = pow(a, d, n)
-    #     if x == 1 or x == n - 1:
-    #         return True
-    #     while d != n - 1:
-    #         x = (x * x) % n
-    #         d *= 2
-    #         if x == 1:
-    #             return False
-    #         if x == n - 1:
-    #             return True
-    #     return False
