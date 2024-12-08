@@ -23,7 +23,7 @@ class CPUParallelPrimalityTestStrategy(PrimalityTestStrategy):
             start_idx = i * repetitions_per_core
             end_idx = min(start_idx + repetitions_per_core, len(bases))
             core_bases = bases[start_idx:end_idx]
-            processes.append(Process(target=self.single_process, args=(repetitions_per_core, core_bases, n, value_is_not_prime)))
+            processes.append(Process(target=self.single_process, args=(core_bases, n, value_is_not_prime)))
 
         # Uruchom wszystkie procesy i poczekaj na ich zakończenie
         for process in processes:
