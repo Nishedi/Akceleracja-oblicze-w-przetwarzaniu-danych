@@ -6,11 +6,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy
+from matplotlib.ticker import ScalarFormatter
 
 from miller_rabin import MillerRabinTest
 from random_base_generator import RandomBaseGenerator
 from strategies.cpu_parallel_strategy import CPUParallelPrimalityTestStrategy
 from strategies.cpu_strategy import CPUPrimalityTestStrategy
+from strategies.gpu_strategy import GPUPrimalityTestStrategy
 
 
 class Benchmark:
@@ -20,9 +22,11 @@ class Benchmark:
 
         self.cpu_strategy = CPUPrimalityTestStrategy()
         self.parallel_strategy = CPUParallelPrimalityTestStrategy()
+        self.gpu_strategy = GPUPrimalityTestStrategy()
 
         self.cpu_test = MillerRabinTest(self.cpu_strategy)
         self.parallel_test = MillerRabinTest(self.parallel_strategy)
+        self.gpu_test =MillerRabinTest(self.gpu_strategy)
 
     def generate_range_data(self,
                             num_ranges: List[Tuple[int, int]],
@@ -49,7 +53,8 @@ class Benchmark:
         results = {
             "cpu": {},
             "parallel": {},
-            "input_sizes": {}
+            "input_sizes": {},
+            "gpu_sizes": {}
         }
 
         print()
@@ -90,23 +95,35 @@ class Benchmark:
             print("parallel", time.time() - start_time)
         results["parallel"][index] = parallel_times
 
-        return cpu_times, parallel_times
+        gpu_times = []
+        for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
+            start_time = time.time()
+            self.gpu_test.is_prime(num, iterations, random_bases)
+            gpu_times.append(time.time() - start_time)
+            print("gpu", time.time() - start_time)
+        results["gpu"][index] = cpu_times
+
+
+        return cpu_times, parallel_times, gpu_times
 
     def run_benchmarks(self,
                        test_data: Dict[str, List[int]],
                        iterations: int = 10) -> Dict[str, Dict[str, List[float]]]:
         results = {
             "cpu": {},
-            "parallel": {}
+            "parallel": {},
+            "gpu": {}
         }
 
         for range_id, numbers in test_data.items():
             print(f"\nBenchmarking range {range_id}")
 
-            cpu_times, parallel_times = self.measure_time(numbers, iterations, results, range_id)
+            cpu_times, parallel_times, gpu_times = self.measure_time(numbers, iterations, results, range_id)
 
             print(f"Average CPU time: {np.mean(cpu_times):.4f}s")
             print(f"Average Parallel time: {np.mean(parallel_times):.4f}s")
+            print(f"Average GPI Parallel time: {np.mean(gpu_times):.4f}s")
 
         with open(self.output_dir / "bar_results.json", "w") as f:
             json.dump(results, f)
@@ -118,15 +135,18 @@ class Benchmark:
         ranges = list(results["cpu"].keys())
         cpu_data = [results["cpu"][range_id] for range_id in ranges]
         parallel_data = [results["parallel"][range_id] for range_id in ranges]
+        gpu_data = [results["gpu"][range_id] for range_id in ranges]
 
         cpu_means = [np.mean(times) for times in cpu_data]
         parallel_means = [np.mean(times) for times in parallel_data]
+        gpu_means = [np.mean(times) for times in gpu_data]
 
         x = np.arange(len(ranges))
         width = 0.35
 
         plt.bar(x - width / 2, cpu_means, width, label='CPU Strategy')
         plt.bar(x + width / 2, parallel_means, width, label='Parallel Strategy')
+        plt.bar(x + width / 2, gpu_means, width, label='GPU Parallel Strategy')
 
         plt.xlabel('Number Ranges')
         plt.ylabel('Average Time (seconds)')
@@ -142,14 +162,19 @@ class Benchmark:
 
         cpu_means = [np.mean(results["cpu"][d]) for d in digits]
         parallel_means = [np.mean(results["parallel"][d]) for d in digits]
+        gpu_means = [np.mean(results["gpu"][d]) for d in digits]
         cpu_stds = [np.std(results["cpu"][d]) for d in digits]
         parallel_stds = [np.std(results["parallel"][d]) for d in digits]
+        gpu_stds = [np.std(results["gpu"][d]) for d in digits]
 
         input_sizes = [np.mean(results["input_sizes"][d]) for d in digits]
 
         plt.figure(figsize=(12, 6))
         plt.errorbar(input_sizes, cpu_means, yerr=cpu_stds, label='CPU Strategy', marker='o')
         plt.errorbar(input_sizes, parallel_means, yerr=parallel_stds, label='Parallel Strategy', marker='s')
+        plt.errorbar(input_sizes, gpu_means, yerr=gpu_stds, label='GPU Parallel Strategy', marker='s')
+
+        plt.xscale("log")
 
         plt.xlabel('Input Size (Number)')
         plt.ylabel('Execution Time (seconds)')
@@ -168,23 +193,25 @@ class Benchmark:
         min_val, max_val = test_range
         numbers = [sympy.randprime(min_val, max_val) for _ in range(samples_per_step)]
 
+
         results = {
             "iterations": [],
             "cpu_times": [],
-            "parallel_times": []
+            "parallel_times": [],
+            "gpu_times": []
         }
-
         print("\nStarting iteration test...")
 
         iterations = start_iterations
         while iterations <= end_iterations:
             print(f"Testing {iterations} iterations...")
 
-            cpu_times, parallel_times = self.measure_time_for_iterations(numbers, iterations)
+            cpu_times, parallel_times, gpu_times = self.measure_time_for_iterations(numbers, iterations)
 
             results["iterations"].append(iterations)
             results["cpu_times"].append(np.mean(cpu_times))
             results["parallel_times"].append(np.mean(parallel_times))
+            results["gpu_times"].append(np.mean(gpu_times))
 
             iterations *= 10  # Zwiększamy liczbę iteracji o jedno zero
 
@@ -208,17 +235,28 @@ class Benchmark:
             self.parallel_test.is_prime(num, iterations, random_bases)
             parallel_times.append(time.time() - start_time)
 
-        return cpu_times, parallel_times
+        gpu_times = []
+        for num in test_numbers:
+            random_bases = RandomBaseGenerator.generate_bases(num, iterations)
+            start_time = time.time()
+            self.gpu_test.is_prime(num, iterations, random_bases)
+            gpu_times.append(time.time() - start_time)
+
+        return cpu_times, parallel_times, gpu_times
 
     def generate_iterations_chart(self, results: Dict[str, List[float]]):
         iterations = results["iterations"]
         cpu_times = results["cpu_times"]
         parallel_times = results["parallel_times"]
+        gpu_times = results["gpu_times"]
 
         plt.figure(figsize=(12, 6))
 
         plt.plot(iterations, cpu_times, label="CPU Strategy", marker='o')
         plt.plot(iterations, parallel_times, label="Parallel Strategy", marker='s')
+        plt.plot(iterations, gpu_times, label="GPU Parallel Strategy", marker='s')
+
+        plt.xscale("log")
 
         plt.xlabel('Number of Iterations')
         plt.ylabel('Average Execution Time (seconds)')
@@ -241,14 +279,14 @@ def main():
         (10000000, 100000000)
     ]
 
-    range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
-    range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
-    benchmark.generate_bar_chart(range_results)
+    # range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
+    # range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
+    # benchmark.generate_bar_chart(range_results)
+    #
+    # results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
+    # benchmark.generate_line_chart(results)
 
-    results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
-    benchmark.generate_line_chart(results)
-
-    iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=10000000, samples_per_step=3)
+    iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=100000000, samples_per_step=3)
     benchmark.generate_iterations_chart(iteration_results)
 
 
