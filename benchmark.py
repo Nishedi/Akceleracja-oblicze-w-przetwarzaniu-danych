@@ -102,7 +102,7 @@ class Benchmark:
             self.gpu_test.is_prime(num, iterations, random_bases)
             gpu_times.append(time.time() - start_time)
             print("gpu", time.time() - start_time)
-        results["gpu"][index] = cpu_times
+        results["gpu"][index] = gpu_times
 
 
         return cpu_times, parallel_times, gpu_times
@@ -144,9 +144,9 @@ class Benchmark:
         x = np.arange(len(ranges))
         width = 0.35
 
-        plt.bar(x - width / 2, cpu_means, width, label='CPU Strategy')
-        plt.bar(x + width / 2, parallel_means, width, label='Parallel Strategy')
-        plt.bar(x + width / 2, gpu_means, width, label='GPU Parallel Strategy')
+        plt.bar(x - width, cpu_means, width, label='CPU Strategy')
+        plt.bar(x, parallel_means, width, label='Parallel Strategy')
+        plt.bar(x + width, gpu_means, width, label='GPU Parallel Strategy')
 
         plt.xlabel('Number Ranges')
         plt.ylabel('Average Time (seconds)')
@@ -279,12 +279,12 @@ def main():
         (10000000, 100000000)
     ]
 
-    # range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
-    # range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
-    # benchmark.generate_bar_chart(range_results)
-    #
-    # results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
-    # benchmark.generate_line_chart(results)
+    range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
+    range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
+    benchmark.generate_bar_chart(range_results)
+
+    results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
+    benchmark.generate_line_chart(results)
 
     iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=100000000, samples_per_step=3)
     benchmark.generate_iterations_chart(iteration_results)
