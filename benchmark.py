@@ -142,7 +142,7 @@ class Benchmark:
         gpu_means = [np.mean(times) for times in gpu_data]
 
         x = np.arange(len(ranges))
-        width = 0.35
+        width = 0.25
 
         plt.bar(x - width, cpu_means, width, label='CPU Strategy')
         plt.bar(x, parallel_means, width, label='Parallel Strategy')
