@@ -170,7 +170,7 @@ class Benchmark:
         input_sizes = [np.mean(results["input_sizes"][d]) for d in digits]
 
         plt.figure(figsize=(12, 6))
-        plt.errorbar(input_sizes, cpu_means, yerr=cpu_stds, label='CPU Strategy', marker='o')
+        plt.errorbar(input_sizes, cpu_means, yerr=cpu_stds, label='CPU Strategy', marker='s')
         plt.errorbar(input_sizes, parallel_means, yerr=parallel_stds, label='Parallel Strategy', marker='s')
         plt.errorbar(input_sizes, gpu_means, yerr=gpu_stds, label='GPU Parallel Strategy', marker='s')
 
