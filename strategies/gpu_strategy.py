@@ -67,9 +67,7 @@ class GPUPrimalityTestStrategy(PrimalityTestStrategy):
         results = np.zeros(k, dtype=np.int32)
         gpu_results = gpuarray.to_gpu(results)
 
-        drv.init()
-        device = drv.Device(0)
-        max_threads_per_block = device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK)
+        block_size = 256
 
         # Uruchamianie kernela
         block_size = max_threads_per_block
