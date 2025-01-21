@@ -53,8 +53,9 @@ class Benchmark:
         results = {
             "cpu": {},
             "parallel": {},
-            "input_sizes": {},
-            "gpu_sizes": {}
+            "gpu": {},
+            "input_sizes": {}
+
         }
 
         print()
@@ -252,7 +253,7 @@ class Benchmark:
 
         plt.figure(figsize=(12, 6))
 
-        plt.plot(iterations, cpu_times, label="CPU Strategy", marker='o')
+        plt.plot(iterations, cpu_times, label="CPU Strategy", marker='S')
         plt.plot(iterations, parallel_times, label="Parallel Strategy", marker='s')
         plt.plot(iterations, gpu_times, label="GPU Parallel Strategy", marker='s')
 
@@ -280,14 +281,14 @@ def main():
     ]
 
     range_data = benchmark.generate_range_data(num_ranges=ranges, numbers_per_range=2)
-    range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
-    benchmark.generate_bar_chart(range_results)
+    # range_results = benchmark.run_benchmarks(test_data=range_data, iterations=10000000)
+    # benchmark.generate_bar_chart(range_results)
 
-    results = benchmark.generate_increasing_data(max_digits=12, step=2, samples_per_step=3, iterations=10000000)
+    results = benchmark.generate_increasing_data(max_digits=11, step=2, samples_per_step=3, iterations=10000000)
     benchmark.generate_line_chart(results)
 
-    iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=100000000, samples_per_step=3)
-    benchmark.generate_iterations_chart(iteration_results)
+    # iteration_results = benchmark.generate_iterations_test(test_range=ranges[2], start_iterations=1000, end_iterations=100000000, samples_per_step=3)
+    # benchmark.generate_iterations_chart(iteration_results)
 
 
 if __name__ == "__main__":
